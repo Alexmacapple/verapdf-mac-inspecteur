@@ -2,6 +2,8 @@
 
 | Pour comprendre… | Lire… |
 |---|---|
+| Comment utiliser l’application | [Guide utilisateur](../README.md) |
+| Comment l’installer et la maintenir | [Installation et maintenance](installation.md) |
 | Le besoin, l’origine et les décisions | [Genèse du projet](genese.md) |
 | Les logiciels, ressources et interventions utilisés | [Moyens et sources](moyens-et-sources.md) |
 | Le comportement fonctionnel actuel | [Spécifications a posteriori](specifications-fonctionnelles.md) |

@@ -1,103 +1,118 @@
 # veraPDF Mac Inspecteur
 
-Application macOS autonome pour lire un PDF à côté des erreurs de son contrôle
-PDF/UA-1. Aucun document modifié, aucun serveur et aucun envoi du PDF.
+**Repérez dans vos PDF les erreurs d’accessibilité signalées par veraPDF et préparez leur correction.**
 
-## Utilisation
+L’application réunit la liste des erreurs, le document et des explications dans
+une même fenêtre. Sélectionnez une erreur pour consulter la page concernée et,
+quand sa localisation est établie, voir la zone encadrée.
 
-Ouvrir `build/veraPDF Mac Inspecteur.app`, puis **Ouvrir un PDF**. Une validation
-veraPDF fraîche démarre ; choisir une occurrence à gauche pour afficher son
-diagnostic et sa page. Le bouton **Importer un XML** lit un rapport existant
-compatible. **Enregistrer le XML** conserve le rapport de contrôle.
+Votre PDF reste sur votre Mac. L’application le consulte sans le modifier.
 
-Les annotations ont leur rectangle PDF ; les images directement associées à
-un MCID de page ont leur cadre calculé depuis les opérateurs PDF. Les textes
-des polices sont repérés par leur nom sur la page. Une balise peut avoir une
-page connue sans rectangle précis : cet état reste visible. Les erreurs de
-métadonnées sont globales. Aucune localisation arbitraire n’est produite.
-Une balise mêlant plusieurs types de contenu affiche « Localisation partielle »
-si seuls certains cadres sont établis, y compris en présence d’images intégrées
-au flux ou d’objets référencés non localisés. Les images réellement rognées, les
-découpes indéterminées et les MCID ambigus ne reçoivent aucun cadre approximatif.
-Une découpe rectangulaire qui contient l’image conserve son cadre. Une page portée uniquement par un ancêtre
-de la balise n’est pas empruntée.
+## À quoi ça sert ?
 
-## Dépendances et construction
+- Retrouver une figure sans alternative, un lien sans description ou une police non incorporée.
+- Comprendre ce qui est signalé et la correction à préparer.
+- Passer d’une erreur à sa page sans chercher manuellement dans tout le document.
+- Enregistrer le rapport pour conserver une trace du contrôle.
 
-macOS 14 ou ultérieur, outils de compilation Swift, Python 3.12 avec `pikepdf`
-et `PyMuPDF`, et veraPDF déjà installé dans `/opt/homebrew/bin/verapdf`.
-Le script ne les télécharge pas. `PYTHON_BIN` choisit un autre interpréteur.
+Le contrôle utilise **PDF/UA-1**, un référentiel d’accessibilité des PDF.
+L’application vous aide à examiner les défauts techniques détectés ; elle ne
+corrige pas automatiquement le document et ne remplace pas une vérification humaine.
 
-```bash
-bash scripts/build.sh
-bash scripts/test.sh
-open 'build/veraPDF Mac Inspecteur.app'
-```
+## Démarrer
 
-Le paquet reste dépendant du Python local : ce n’est pas une distribution
-notarisée autonome. Aucun dépôt GitHub distant n’est créé par cette livraison.
+Si l’application est déjà installée, ouvrez **veraPDF Mac Inspecteur** depuis
+le Finder, ou depuis le Dock si vous l’y avez ajoutée.
 
-## Localisation et confiance
+**Vous ne l’avez pas encore ?** La version actuelle se construit à partir des
+sources : aucun installateur prêt à télécharger n’est proposé dans ce dépôt.
+Le [guide d’installation](docs/installation.md) décrit les prérequis et les étapes.
 
-Un rapport importé indique un chemin et une taille, pas une empreinte au moment
-du contrôle. L’interface le dit ; pour une preuve fraîche, utiliser **Analyser**.
-Les empreintes du PDF sont comparées avant et après le traitement. Les rapports
-produits sont conservés sous `~/Library/Application Support/Inspecteur veraPDF/Rapports/`.
+## Votre premier contrôle
 
-Les formulaires, balises couvrant plusieurs flux, images dans des Form XObjects,
-graphismes vectoriels et textes de figures ne reçoivent pas nécessairement de
-rectangle. Les rectangles de police concernent les fragments du même nom sur
-la page ; plusieurs objets homonymes rendent l’attribution ambiguë et masquent
-les cadres. Les dimensions sont des coordonnées PDF, converties par PDFKit.
+1. Cliquez sur **Ouvrir un PDF** et choisissez votre document. L’analyse démarre automatiquement.
+2. Attendez la fin du contrôle. Vous pouvez l’interrompre avec **Annuler**.
+3. Sélectionnez une erreur dans la liste de gauche.
+4. Consultez la page au centre et l’explication à droite, dans **Correction à préparer**.
+5. Préparez la correction dans le document source ou dans votre outil de remédiation.
+6. Ouvrez le PDF corrigé dans l’application pour effectuer un nouveau contrôle.
 
-Limites : PDF de 256 Mio, rapport XML de 64 Mio, 2 000 échecs affichés au maximum,
-validation de 120 secondes et traitement global de 180 secondes, avec secours
-d’arrêt après deux secondes. **Annuler** arrête aussi les descendants du moteur.
-Le compteur total reste celui du rapport. L’absence
-de détail ou de zone n’est pas une réussite. Les explications françaises ciblent
-les règles courantes ; sans traduction, l’exigence originale est visible dans la
-liste et dans le détail, avec la mention « traduction indisponible ».
+Les corrections se font, par exemple, dans le document Word ou PowerPoint
+d’origine, ou dans un éditeur PDF adapté. Cet inspecteur vous aide à les situer.
 
-veraPDF reçoit explicitement un plafond de 2 000 détails par règle. Le plafond
-local reste de 2 000 occurrences au total. Si le XML ou ce plafond tronque les
-détails, un avertissement visible indique le nombre chargé et les règles
-incomplètes. Le pied de page distingue les occurrences visibles après filtrage,
-les occurrences chargées et le total des échecs.
+## Se repérer dans la fenêtre
 
-La navigation interne à l’aperçu met à jour le compteur de page. Les rectangles
-ne sont dessinés que sur leur page, y compris pendant un changement de page.
+| À gauche : les erreurs | Au centre : votre PDF | À droite : le diagnostic |
+|---|---|---|
+| Choisissez une occurrence et utilisez le filtre pour retrouver une figure, une police ou une page. | Feuilletez le document, agrandissez l’aperçu ou cliquez sur **Ajuster**. | Lisez le conseil, les limites de localisation et, si nécessaire, dépliez **Exigence et preuve technique**. |
 
-Ce logiciel n’est pas un produit officiel veraPDF. Une validation technique ne
-remplace ni le jugement humain, ni un essai avec lecteur d’écran.
+Une **règle** est un contrôle. Une **occurrence** est un échec de ce contrôle
+dans le document : une même règle peut donc produire de nombreuses occurrences.
+Plusieurs règles peuvent aussi signaler le même objet.
 
-Un contrôle refusé ou annulé conserve le résultat précédent. Un PDF déplacé
-peut être relié à son rapport par nom et taille, avec provenance déclarative
-explicite. Après chaque analyse réussie, les rapports générés au-delà de 50
-fichiers ou de 30 jours rejoignent la Corbeille ; le rapport affiché et les XML
-importés ou exportés ailleurs sont préservés. Le menu **Rapports** permet aussi
-ce nettoyage manuellement.
+## Comprendre les zones affichées
 
-## Installer les dépendances Python dans un environnement dédié
+| Ce que vous voyez | Ce que cela signifie |
+|---|---|
+| Un cadre orange | Une zone a été établie à partir du document. Examinez-la avec le diagnostic associé. |
+| **Localisation partielle** | Le cadre ne couvre qu’une partie du contenu concerné. Examinez aussi le reste de la page. |
+| Une page, sans cadre | La page est connue, mais l’application n’a pas établi de zone précise. L’erreur reste à examiner. |
+| **Sans localisation dans une page** | Le constat concerne le document entier, ou sa page n’a pas pu être déterminée. |
 
-Les chemins par défaut ciblent une installation Homebrew Apple Silicon.
-Avec Python 3.12 et veraPDF déjà disponibles :
+Une absence de cadre ne signifie pas une absence de problème. Certaines figures
+complexes, certains textes ou certaines polices ne peuvent pas être localisés
+précisément par cette version.
 
-```bash
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-PYTHON_BIN="$PWD/.venv/bin/python" bash scripts/build.sh
-PYTHON_BIN="$PWD/.venv/bin/python" bash scripts/test.sh
-```
+## Les commandes utiles
 
-Le paquet mémorise le chemin de Python ; conserver cet environnement ou
-reconstruire l’application après déplacement. `VERAPDF_COMMAND` permet de
-choisir un autre validateur dans l’environnement de lancement du moteur.
+| Commande | Quand l’utiliser |
+|---|---|
+| **Analyser** | Pour refaire un contrôle du PDF ouvert, avec veraPDF. |
+| **Importer un XML** | Si vous avez déjà un rapport veraPDF PDF/UA-1 correspondant au PDF ouvert. |
+| **Enregistrer le XML** | Pour conserver le rapport à l’emplacement de votre choix. |
+| **Rapports** | Pour ouvrir le dossier des rapports ou mettre les anciens rapports générés à la Corbeille. |
+| **Annuler** | Pour interrompre un contrôle en cours. Le résultat précédent est conservé. |
 
-## Documentation du projet
+Un rapport importé peut être ancien : son association au PDF ne prouve pas
+que le document est resté identique depuis le contrôle. Pour contrôler son
+état actuel, cliquez sur **Analyser**.
 
-La [documentation](docs/README.md) contient la [genèse](docs/genese.md), les
-[moyens et sources](docs/moyens-et-sources.md), les
-[spécifications fonctionnelles a posteriori](docs/specifications-fonctionnelles.md),
-les [spécifications techniques](docs/specifications-techniques.md) et la
-[recette](docs/recette.md). Les rapports de revue gardent les anciens noms comme
-témoignage de la construction.
+Les rapports générés sont conservés temporairement. Ceux qui dépassent les
+50 plus récents ou 30 jours rejoignent la Corbeille ; le rapport affiché reste
+protégé. Utilisez **Enregistrer le XML** pour garder durablement une copie
+ailleurs. Votre PDF n’est pas concerné par ce nettoyage.
+
+## Questions fréquentes
+
+**Le diagnostic est indiqué comme incomplet.**
+Le rapport ou la limite d’affichage ne permet pas de lister tous les échecs.
+Le bandeau indique les nombres concernés ; l’application affiche au maximum
+2 000 occurrences. Examinez les erreurs disponibles, corrigez-les puis
+recommencez le contrôle. Si vous avez importé un ancien rapport, **Analyser**
+peut fournir davantage de détails.
+
+**Une explication est en anglais.**
+Les règles courantes disposent d’un conseil en français. Pour les autres,
+l’exigence originale de veraPDF reste visible, avec la mention
+**traduction indisponible** dans le détail.
+
+**L’analyse échoue ou prend trop longtemps.**
+Vous pouvez l’annuler ; elle est aussi limitée à environ trois minutes au
+total. Le résultat précédent est conservé. Les fichiers acceptés sont limités
+à 256 Mio pour un PDF et 64 Mio pour un rapport XML. Pour un validateur
+introuvable ou un problème de dépendances, consultez le [guide d’installation](docs/installation.md).
+
+**Il n’y a plus d’erreurs : mon PDF est-il accessible ?**
+Si le rapport indique zéro échec, le contrôle automatique n’a pas signalé de
+défaut. Une liste vide après filtrage n’a pas cette signification. Il reste
+notamment à vérifier la pertinence des alternatives, l’ordre de lecture et
+l’utilisation réelle avec un lecteur d’écran.
+
+## En savoir plus
+
+La [documentation du projet](docs/README.md) présente la genèse, les ressources
+utilisées, les spécifications et les vérifications effectuées. Pour construire
+ou tester l’application, consultez [Installation et maintenance](docs/installation.md).
+
+Ce projet indépendant n’est pas un produit officiel veraPDF. Cette version
+prend en charge PDF/UA-1 ; elle ne propose pas les profils PDF/UA-2 ou WTPDF.
