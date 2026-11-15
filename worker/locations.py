@@ -272,7 +272,8 @@ class Locator:
                                  reason='Unité de page particulière ; coordonnées de police non établies.')]
                 boxes = []
                 if number not in self.text_cache:
-                    self.text_cache[number] = page.get_text('dict')['blocks']
+                    flags = fitz.TEXTFLAGS_DICT & ~fitz.TEXT_PRESERVE_IMAGES
+                    self.text_cache[number] = [b for b in page.get_text('dict', flags=flags)['blocks'] if b['type'] == 0]
                 # MuPDF renvoie le texte dans la page non tournée, relatif à la CropBox.
                 # La hauteur et l’origine sont celles de cette boîte avant rotation.
                 left, top = page.cropbox.x0, page.mediabox.y1 - page.cropbox.y0

@@ -8,19 +8,20 @@ les limites présentes ; elle n’annonce pas une compatibilité universelle.
 | Élément | Constat vérifié | Conséquence |
 |---|---|---|
 | Architecture du binaire local | `arm64` uniquement | Cible Apple Silicon ; le binaire ne convient pas aux Mac Intel. |
-| Minimum inscrit dans le binaire Mach-O | `LC_BUILD_VERSION`, `minos 27.0` | Binaire compilé pour macOS 27.0 minimum ; compatibilité avec les versions antérieures non validée. |
+| Minimum inscrit dans le binaire Mach-O | `LC_BUILD_VERSION`, `minos 14.0` | Cible de compilation macOS 14.0 ; exécution sur les anciens macOS restant à qualifier. |
 | SDK de compilation | `27.2` | Version des outils utilisés, à distinguer du minimum `minos`. |
-| Minimum déclaré dans `Info.plist` | `LSMinimumSystemVersion = 14.0` | Déclaration incohérente avec le binaire ; elle ne prouve pas une compatibilité macOS 14. |
+| Minimum déclaré dans `Info.plist` | `LSMinimumSystemVersion = 14.0` | Même cible que le binaire ; cohérence contrôlée après compilation. |
 | Poste d’exécution contrôlé | macOS 27.0, Apple Silicon | Recette locale uniquement, pas une campagne de tests sur tous les Mac. |
 
-Le [script de construction](../scripts/build.sh) ne fixe actuellement ni cible
-de déploiement explicite, ni construction universelle Intel + Apple Silicon.
-Une reconstruction sur un autre poste peut donc produire d’autres métadonnées.
-La compatibilité des sources avec macOS 14 n’est pas démontrée par le plist.
+Le [script de construction](../scripts/build.sh) fixe une cible explicite à
+`14.0` par défaut et reprend cette valeur dans le plist. Il refuse un paquet
+dont le minimum du binaire diffère. `MACOSX_DEPLOYMENT_TARGET` permet de choisir
+une autre version. La construction utilise l’architecture du poste ; elle
+ne produit pas un binaire universel Intel + Apple Silicon.
 
-**À corriger dans un chantier de compatibilité :** aligner la cible de
-compilation et le plist, puis tester chaque combinaison annoncée. Cette
-documentation ne modifie pas la compilation et ne résout pas cette incohérence.
+La version 0.2.1 corrige l’ancien écart entre `minos 27.0` et le plist à `14.0`.
+Il reste à tester l’application et ses dépendances sur chaque ancien système
+avant d’en annoncer la compatibilité effective.
 
 ## Ce qui doit être installé
 
@@ -88,6 +89,9 @@ La variable `PYTHON_BIN` du [script de construction](../scripts/build.sh)
 choisit Python. Sa valeur par défaut est
 `/opt/homebrew/opt/python@3.12/bin/python3.12`. Le chemin absolu choisi est
 inscrit sous `PythonExecutable` dans le plist du paquet.
+Un nom tel que `PYTHON_BIN=python3.12` est résolu dans le `PATH` lors de la
+construction et des tests. Le chemin obtenu reste absolu et conserve les
+liens stables Homebrew ; cette résolution ne se refait pas au lancement.
 
 Le programme ne recherche pas automatiquement un autre Python si ce chemin
 disparaît. Copier seulement le `.app` vers un autre Mac ne copie ni Python,

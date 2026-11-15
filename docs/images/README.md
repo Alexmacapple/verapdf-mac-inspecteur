@@ -26,6 +26,12 @@ Le script génère un PDF et un paquet de diagnostic dans un répertoire tempora
 compile les vues et le moteur du projet, puis sélectionne les occurrences
 programmatiquement. Une copie temporaire du point d’entrée adapte seulement
 la sélection initiale et le dossier de rapports ; les vues ne sont pas réécrites.
+Le générateur crée une session POSIX dédiée à chaque capture. Dans la copie
+temporaire du moteur uniquement, le détachement vers une autre session est
+désactivé : l’application, le moteur et veraPDF sont ainsi arrêtés ensemble,
+y compris en cas de délai dépassé. Les chemins accentués sont encodés en UTF-8 dans les
+sources générées. Le répertoire temporaire propre au compilateur Swift reste
+`/tmp/` pour éviter un arrêt du pilote local avec un `TMPDIR` accentué.
 L’application installée et ses rapports privés ne sont pas modifiés.
 
 Les métadonnées de contrôle imposent la page 2 et la présence d’un cadre avant

@@ -61,6 +61,7 @@ final class Inspector: ObservableObject {
     @Published var error: String?
     @Published var query = ""
     @Published var zoom: CGFloat = 1
+    @Published var fitRequest = UUID()
     @Published var documentGeneration = UUID()
     @Published var pageCount = 0
     @Published var notice: String?
@@ -80,6 +81,16 @@ final class Inspector: ObservableObject {
         selectedID = id
         if let first = selected?.locations.first { page = first.page }
     }
+    func adjustZoom() {
+        zoom = 1
+        fitRequest = UUID()
+    }
+    private func showInitialPDF(_ pdf: URL) {
+        guard pdfURL == nil else { return }
+        pdfURL = pdf
+        pageCount = PDFDocument(url: pdf)?.pageCount ?? 0
+        documentGeneration = UUID()
+    }
     func run(pdf: URL, report: URL? = nil) {
         guard !busy else { return }
         error = nil
@@ -88,6 +99,7 @@ final class Inspector: ObservableObject {
         guard let script = workerScript else {
             error = "Le moteur de lecture manque dans l’application. Reconstruire le paquet."
             busy = false
+            showInitialPDF(pdf)
             return
         }
         let folder = reportFolder
@@ -109,6 +121,7 @@ final class Inspector: ObservableObject {
                         self.error = reason
                         self.busy = false
                         self.task = nil
+                        self.showInitialPDF(pdf)
                         return
                     }
                     self.pdfURL = pdf
@@ -131,11 +144,7 @@ final class Inspector: ObservableObject {
                     self.busy = false
                     self.task = nil
                     // Un échec initial laisse néanmoins le PDF consultable et navigable.
-                    if self.pdfURL == nil {
-                        self.pdfURL = pdf
-                        self.pageCount = PDFDocument(url: pdf)?.pageCount ?? 0
-                        self.documentGeneration = UUID()
-                    }
+                    self.showInitialPDF(pdf)
                 }
             }
         }

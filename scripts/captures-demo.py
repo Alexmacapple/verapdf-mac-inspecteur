@@ -1,8 +1,11 @@
 """Produit deux captures réelles à partir d’un PDF fictif, sans document utilisateur."""
+import base64
 import json
+import os
 from pathlib import Path
 import plistlib
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -13,6 +16,32 @@ from pikepdf import Array, Dictionary, Name, String
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'docs/images'
+
+
+def swift_path(path):
+    encoded = base64.b64encode(os.fsencode(path)).decode('ascii')
+    return f'String(decoding: Data(base64Encoded: "{encoded}")!, as: UTF8.self)'
+
+
+def stop_capture(process):
+    # Popen crée ce groupe avant de rendre la main ; tous ses enfants y restent.
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        # Récolter le parent terminé : macOS renvoie EPERM pour un groupe
+        # qui ne contient plus que son zombie, au lieu de ESRCH.
+        process.poll()
+        try:
+            os.killpg(process.pid, sig)
+        except ProcessLookupError:
+            break
+        if sig == signal.SIGTERM:
+            time.sleep(0.2)
+    if process.poll() is None:
+        process.terminate()
+    try:
+        process.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=10)
 
 
 def text(x, y, size, value, color='0.12 0.17 0.24'):
@@ -106,6 +135,14 @@ def main():
         executable.parent.mkdir(parents=True)
         for source in (ROOT/'worker').glob('*.py'):
             shutil.copy(source, resources/source.name)
+        worker = resources/'analyzer.py'
+        worker_source = worker.read_text()
+        assert worker_source.count('        os.setsid()') == 1
+        # La session de capture appartient au générateur ; aucun enfant ne s’en détache.
+        # Foundation.Process crée lui-même un groupe : rejoindre celui de l’app
+        # avant les imports lourds et avant tout lancement de veraPDF.
+        worker.write_text('import os\nos.setpgid(0, os.getsid(0))\n'+worker_source.replace(
+            '        os.setsid()', '        pass  # Session possédée par le générateur de captures.', 1))
         info = dict(CFBundleIdentifier='org.alex.verapdf-inspecteur.captures',
             CFBundleName='veraPDF Mac Inspecteur', CFBundleExecutable=executable.name,
             CFBundlePackageType='APPL', PythonExecutable=sys.executable)
@@ -121,18 +158,21 @@ def main():
         source = source.replace(needle, selection+needle, 1)
         needle = '                    model.run(pdf: pdf, report: report)'
         assert needle in source
-        source = source.replace(needle, '                    model.reportFolder = URL(fileURLWithPath: '+json.dumps(str(work/'rapports'))+')\n'+needle)
+        source = source.replace(needle, '                    model.reportFolder = URL(fileURLWithPath: '+swift_path(work/'rapports')+')\n'+needle)
         entry = work/'App.swift'
         entry.write_text(source)
         sources = [str(p) for p in (ROOT/'Sources').glob('*.swift') if p.name != 'App.swift']
+        # Le pilote Swift local s’arrête avant compilation si son TMPDIR est accentué.
+        # Les sources et le paquet conservent leurs chemins Unicode.
+        compiler_env = dict(os.environ, TMPDIR='/tmp/')
         subprocess.run(['xcrun', 'swiftc', '-swift-version', '5', '-O', '-D', 'INSPECTOR_DIAGNOSTICS',
             '-framework', 'SwiftUI', '-framework', 'AppKit', '-framework', 'PDFKit',
-            *sources, str(entry), '-o', str(executable)], check=True)
+            *sources, str(entry), '-o', str(executable)], check=True, env=compiler_env)
         subprocess.run(['codesign', '--force', '--sign', '-', str(app)], check=True)
         for rule, name in [('7.3-1', 'figure-sans-alternative.png'), ('7.18.5-2', 'lien-sans-description.png')]:
             shot = OUTPUT/name
             capture = work/name
-            process = subprocess.Popen([str(executable), '--pdf', str(demo), '--capture', str(capture), '--demo-rule', rule])
+            process = subprocess.Popen([str(executable), '--pdf', str(demo), '--capture', str(capture), '--demo-rule', rule], start_new_session=True)
             try:
                 deadline = time.monotonic()+90
                 while not capture.exists() and time.monotonic() < deadline and process.poll() is None:
@@ -144,8 +184,7 @@ def main():
                 shutil.copy(capture, shot)
                 print(shot.relative_to(ROOT), metadata)
             finally:
-                process.terminate()
-                process.wait(timeout=10)
+                stop_capture(process)
 
 
 if __name__ == '__main__':

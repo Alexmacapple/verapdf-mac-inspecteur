@@ -20,7 +20,8 @@ if pdf.name.startswith('sleep'):
     if 'stubborn' in pdf.name:
         program += 'signal.signal(signal.SIGTERM, signal.SIG_IGN); '
     program += 'time.sleep(60)'
-    child = subprocess.Popen([sys.executable, '-c', program])
+    streams = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) if 'closed' in pdf.name else {}
+    child = subprocess.Popen([sys.executable, '-c', program], **streams)
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     (Path(args.output_dir)/'enfant.pid').write_text(str(child.pid))
     time.sleep(60)

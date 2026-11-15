@@ -118,16 +118,18 @@ et veraPDF ne sont pas embarqués ; le lien Homebrew de Python évite un chemin
 Cellar versionné. Le binaire de livraison exclut la capture de diagnostic ;
 `DIAGNOSTICS=1 bash scripts/build.sh` permet une construction dédiée.
 
-Le paquet local observé est uniquement `arm64`, avec `minos 27.0`, alors que
-le plist déclare `14.0`. Le script ne fixe pas de cible de déploiement : la
-compatibilité macOS 14 n’est donc pas acquise. Les chemins de veraPDF et de
-Python ne sont pas découverts automatiquement ; voir les
+Depuis la correction 0.2.1, le paquet local observé est uniquement `arm64`,
+avec `minos 14.0` et un plist à `14.0`. Le script fixe une cible de déploiement
+commune et vérifie leur cohérence ; l’exécution sur macOS 14 reste à qualifier.
+Python est résolu dans le `PATH` à la construction si un nom court est fourni,
+puis son chemin absolu est mémorisé. Les chemins ne sont pas découverts
+automatiquement au lancement ; voir les
 [constats de compatibilité et règles de configuration](compatibilite.md).
 
 ## Qualification
 
 [scripts/test.sh](../scripts/test.sh) exécute les tests Python, le harnais PDFKit
-et le harnais d’exécution Swift. Ce dernier contrôle les sous-processus,
+et les harnais d’exécution et d’actions Swift. Ces derniers contrôlent les sous-processus,
 l’annulation, le délai global, l’état préservé après refus et la sélection du
 cache avec une Corbeille simulée. Les verdicts Fable sont historiques ; les
 corrections mineures ultérieures ont leurs propres tests, pas une nouvelle

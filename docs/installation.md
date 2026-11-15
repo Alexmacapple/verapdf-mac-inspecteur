@@ -9,11 +9,12 @@ graphique : voir le [guide utilisateur](../README.md).
 
 ## Compatibilité actuelle et prérequis
 
-- Le binaire local vérifié cible **Apple Silicon** et porte `minos 27.0`
-  (macOS 27.0). Les Mac Intel et les versions antérieures ne sont pas validés.
-- Le plist annonce encore `14.0`, mais cette déclaration contredit le binaire :
-  **macOS 14 n’est pas un minimum garanti**. Le script ne fixe pas la cible
-  de déploiement ; une autre construction doit être vérifiée séparément.
+- Le binaire local vérifié cible **Apple Silicon** et porte `minos 14.0`,
+  comme le minimum déclaré dans le paquet. L’exécution est vérifiée sur
+  macOS 27.0 ; les Mac Intel et les anciens macOS restent à qualifier.
+- Le script fixe la cible à `14.0` par défaut et vérifie sa cohérence avec le
+  paquet. `MACOSX_DEPLOYMENT_TARGET` permet une autre cible de compilation ;
+  cela ne remplace pas un essai sur le système concerné.
 - Les outils de compilation Swift (`xcrun swiftc`) sont nécessaires pour construire le paquet.
 - Python 3.12 avec les dépendances de [requirements.txt](../requirements.txt).
 - veraPDF **CLI** installé localement avec son environnement Java fonctionnel ;

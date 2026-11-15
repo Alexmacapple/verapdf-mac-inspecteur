@@ -47,7 +47,7 @@ def explain(clause, test):
                     'Consulter l’exigence et son message technique ci-dessous ; confirmer la correction dans l’outil source ou sur une copie.'))
 
 
-def parse_report(xml, pdf_path):
+def parse_report(xml, pdf_path, pdf_hash=None):
     if len(xml) > MAX_XML or re.search(br'<!\s*(DOCTYPE|ENTITY)\b', xml, re.I):
         raise ValueError('Rapport XML trop volumineux ou contenant une déclaration interdite.')
     try:
@@ -58,14 +58,23 @@ def parse_report(xml, pdf_path):
         element.tag = element.tag.rsplit('}', 1)[-1]
     jobs = root.findall('.//job')
     matches = []
+    selected = pdf_path.resolve()
+    selected_size = selected.stat().st_size
+    digests = {selected: pdf_hash} if pdf_hash else {}
+
+    def digest(path):
+        path = path.resolve()
+        if path not in digests:
+            digests[path] = fingerprint(path)
+        return digests[path]
     for job in jobs:
         name = job.findtext('./item/name', '')
         candidate = Path(name).expanduser()
-        same_file = candidate.is_file() and (candidate.resolve() == pdf_path.resolve() or
-                                             fingerprint(candidate) == fingerprint(pdf_path))
+        same_file = candidate.is_file() and (candidate.resolve() == selected or
+                    (candidate.stat().st_size == selected_size and digest(candidate) == digest(selected)))
         item = job.find('item')
         moved = (bool(name) and not candidate.exists() and candidate.name == pdf_path.name and
-                 item is not None and item.get('size') == str(pdf_path.stat().st_size))
+                 item is not None and item.get('size') == str(selected_size))
         if same_file or moved:
             matches.append(job)
     if len(matches) != 1:
@@ -86,6 +95,10 @@ def parse_report(xml, pdf_path):
     failed = natural(details.get('failedChecks'), 'nombre d’échecs')
     passed = natural(details.get('passedChecks'), 'nombre de contrôles réussis')
     failed_rules = natural(details.get('failedRules'), 'nombre de règles en échec')
+    failed_nodes = details.findall("rule[@status='failed']")
+    if ((failed == 0) != (failed_rules == 0) or failed_rules > failed or
+            len(failed_nodes) > failed_rules or (failed == 0 and failed_nodes)):
+        raise ValueError('Rapport incohérent : les compteurs et les règles en échec se contredisent.')
     issues, coverage = [], []
     for rule in details.findall('rule'):
         if rule.get('status') != 'failed':
@@ -101,12 +114,19 @@ def parse_report(xml, pdf_path):
                                advice=advice, requirement=rule.findtext('description', ''),
                                message=check.findtext('errorMessage', ''),
                                context=check.findtext('context', ''), locations=[]))
-        coverage.append(dict(clause=clause, test=test, displayed=len(issues)-start,
-                             total=natural(rule.get('failedChecks', str(len(rule.findall("check[@status='failed']")))), 'nombre d’échecs de la règle')))
+        observed = len(rule.findall("check[@status='failed']"))
+        total = natural(rule.get('failedChecks', str(observed)), 'nombre d’échecs de la règle')
+        if total < observed or (rule.get('failedChecks') is not None and total == 0):
+            raise ValueError('Rapport incohérent : le total d’une règle échouée contredit ses occurrences.')
+        coverage.append(dict(clause=clause, test=test, displayed=len(issues)-start, total=total))
+    reported = sum(c['total'] for c in coverage)
+    if reported > failed or (len(failed_nodes) == failed_rules and
+            all(rule.get('failedChecks') is not None for rule in failed_nodes) and reported != failed):
+        raise ValueError('Rapport incohérent : le total des occurrences diffère du total déclaré.')
     if failed > 0 and not issues:
         raise ValueError('Ce rapport signale des échecs sans leurs occurrences détaillées. Relancer une analyse.')
     return dict(profile=profile, failedChecks=failed,
-                coverage=coverage, complete=len(issues) == failed and
+                coverage=coverage, complete=len(failed_nodes) == failed_rules and len(issues) == failed and
                 all(c['displayed'] == c['total'] for c in coverage),
                 passedChecks=passed, failedRules=failed_rules, issues=issues)
 
@@ -137,7 +157,7 @@ def analyze(pdf_path, report_path=None, output_dir=None):
         if report_path.stat().st_size > MAX_XML:
             raise ValueError('Rapport XML au-delà de 64 Mio.')
         xml = report_path.read_bytes()
-    result = parse_report(xml, pdf_path)
+    result = parse_report(xml, pdf_path, pdf_hash=before)
     locator = Locator(pdf_path)
     try:
         for issue in result['issues']:

@@ -127,20 +127,20 @@ struct InspectorView: View {
                     .accessibilityLabel("Page suivante").disabled(model.page >= model.pageCount)
                 Spacer()
                 Button { model.zoom = max(0.5, model.zoom-0.25) } label: { Image(systemName: "minus.magnifyingglass") }.accessibilityLabel("Réduire")
-                Button("Ajuster") { model.zoom = 1 }
+                Button("Ajuster", action: model.adjustZoom)
                 Button { model.zoom = min(4, model.zoom+0.25) } label: { Image(systemName: "plus.magnifyingglass") }.accessibilityLabel("Agrandir")
             }.buttonStyle(.borderless).padding(12)
             Divider()
             if model.pdfURL != nil {
                 PDFCanvas(url: model.pdfURL, generation: model.documentGeneration, page: $model.page,
-                          zoom: model.zoom, rectangles: model.currentLocation?.rects ?? [])
+                          zoom: model.zoom, fitRequest: model.fitRequest, rectangles: model.currentLocation?.rects ?? [])
             } else {
                 VStack(spacing: 18) {
                     Image(systemName: "doc.text.magnifyingglass").font(.system(size: 48)).foregroundStyle(.secondary)
                     Text("Situer les corrections dans le PDF").font(.title2)
                     Text("Ouvrir un document, puis examiner ses erreurs\nsans changer son contenu.")
                         .foregroundStyle(.secondary).multilineTextAlignment(.center)
-                    Button("Ouvrir un PDF", action: model.choosePDF).buttonStyle(.borderedProminent)
+                    Button("Ouvrir un PDF", action: model.choosePDF).buttonStyle(.borderedProminent).disabled(model.busy)
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }

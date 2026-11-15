@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 extension Inspector {
     func choosePDF() {
+        guard !busy else { return }
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.pdf]
         panel.canChooseDirectories = false

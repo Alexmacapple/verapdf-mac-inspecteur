@@ -62,6 +62,7 @@ final class WorkerTask: @unchecked Sendable {
         child.waitUntilExit()
         lock.lock()
         let reason = stopped
+        if reason != nil { signal(child, SIGKILL) }
         process = nil
         lock.unlock()
         if let reason { throw failure(reason) }

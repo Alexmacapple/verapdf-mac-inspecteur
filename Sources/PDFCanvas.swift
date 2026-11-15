@@ -52,10 +52,12 @@ struct PDFCanvas: NSViewRepresentable {
     let generation: UUID
     @Binding var page: Int
     let zoom: CGFloat
+    let fitRequest: UUID
     let rectangles: [[Double]]
     final class Coordinator {
         var generation: UUID?
         var zoom: CGFloat = 0
+        var fitRequest: UUID?
         var observers: [NSObjectProtocol] = []
         var page: Binding<Int>?
         var updating = false
@@ -98,10 +100,11 @@ struct PDFCanvas: NSViewRepresentable {
             context.coordinator.zoom = 0
         }
         if let target = view.document?.page(at: page-1), view.currentPage !== target { view.go(to: target) }
-        if context.coordinator.zoom != zoom {
+        if context.coordinator.zoom != zoom || context.coordinator.fitRequest != fitRequest {
             view.requestedZoom = zoom
             DispatchQueue.main.async { view.fitPage() }
             context.coordinator.zoom = zoom
+            context.coordinator.fitRequest = fitRequest
         }
         if let layer = view.subviews.compactMap({ $0 as? HighlightLayer }).first {
             layer.pageNumber = page

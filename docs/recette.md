@@ -80,11 +80,11 @@ dossier interne de rapports restent stables pour conserver les données existant
 
 ## Limites de la recette
 
-Le contrôle du binaire a révélé `arm64`, `LC_BUILD_VERSION minos 27.0` et SDK
-`27.2`, sur un poste macOS 27.0. Le plist déclare pourtant `14.0` : cette
-incohérence de compilation reste à corriger et invalide l’ancienne annonce
-de compatibilité macOS 14. Aucun essai sur Mac Intel ou ancien macOS n’a été
-réalisé. Les chemins par défaut sont locaux, sans découverte automatique :
+Le contrôle initial du binaire avait révélé `arm64`, `minos 27.0` et un plist
+à `14.0`. La version 0.2.1 aligne la compilation et le plist à `14.0` et
+contrôle leur cohérence. L’exécution reste vérifiée sur macOS 27.0 seulement :
+aucun essai sur Mac Intel ou ancien macOS n’a été réalisé.
+Les chemins par défaut sont locaux, sans découverte automatique :
 voir [Compatibilité et dépendances](compatibilite.md).
 
 La capture système est refusée à l’hôte REA par les permissions macOS.
@@ -93,5 +93,12 @@ Le parcours manuel complet des boutons, le clavier et VoiceOver ne sont pas
 qualifiés par cette recette. Les cadres vectoriels, Form XObjects et zones
 sans preuve restent hors localisation précise ; ils ne sont pas fabriqués.
 
-Les rapports et captures du document réel restent hors du dépôt. Aucun dépôt
-distant, publication, installateur portable ni notarisation n’a été créé.
+Les rapports et captures du document réel restent hors du dépôt. Aucun
+installateur portable ni aucune notarisation n’ont été créés. Le code source est
+désormais publié sur le dépôt public du projet.
+
+## Corrections ShipGuard en 0.2.1
+
+Les douze constats de l’audit du commit `77d2ffa` sont traités ; les preuves,
+les tests ajoutés et les limites sont décrits dans le
+[compte rendu des corrections](corrections-shipguard-2026-11-15.md).

@@ -12,6 +12,7 @@ struct RuntimeTests {
 
     @MainActor static func main() throws {
         let root = URL(fileURLWithPath: CommandLine.arguments[1])
+        var regressions: [String] = []
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) }
@@ -57,6 +58,19 @@ struct RuntimeTests {
         wait { !model.busy }
         wait { kill(stubborn, 0) != 0 }
         precondition(model.inspection != nil, "Le secours SIGKILL doit arrêter un descendant récalcitrant.")
+        try FileManager.default.removeItem(at: marker)
+        model.run(pdf: folder.appendingPathComponent("sleep-stubborn-closed.pdf"))
+        wait { FileManager.default.fileExists(atPath: marker.path) }
+        let detached = Int32(try String(contentsOf: marker, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines))!
+        RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        model.cancel()
+        wait { !model.busy }
+        RunLoop.current.run(until: Date().addingTimeInterval(2.5))
+        let survivor = kill(detached, 0) == 0
+        if survivor {
+            _ = kill(detached, SIGKILL)
+            regressions.append("Un descendant aux sorties fermées survit à l’annulation.")
+        }
 
         let fresh = Inspector()
         fresh.pythonExecutable = model.pythonExecutable
@@ -71,6 +85,25 @@ struct RuntimeTests {
         wait { !fresh.busy }
         precondition(fresh.inspection == nil && fresh.pageCount == 2 && fresh.pdfURL == bad,
                      "Le PDF doit rester navigable après un premier contrôle refusé.")
+        let missing = Inspector()
+        missing.workerScript = nil
+        missing.run(pdf: bad)
+        if missing.pdfURL != bad || missing.pageCount != 2 {
+            regressions.append("Le PDF initial doit rester accessible même si le moteur est absent.")
+        }
+        let late = Inspector()
+        late.pythonExecutable = model.pythonExecutable
+        late.workerScript = model.workerScript
+        late.reportFolder = folder
+        let latePDF = folder.appendingPathComponent("good-late.pdf")
+        precondition(doc.write(to: latePDF))
+        late.run(pdf: latePDF)
+        // Retarde la publication principale après la réponse du moteur témoin.
+        Thread.sleep(forTimeInterval: 0.5)
+        late.cancel()
+        wait { !late.busy }
+        precondition(late.pdfURL == latePDF && late.pageCount == 2 && late.inspection == nil,
+                     "Une première annulation tardive doit laisser le PDF consultable.")
 
         let cache = folder.appendingPathComponent("cache")
         try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
@@ -86,6 +119,9 @@ struct RuntimeTests {
         recycled = []
         _ = try ReportCache.prune(folder: cache, protecting: active, keep: 0) { recycled.append($0) }
         precondition(Set(recycled.map(\.lastPathComponent)) == Set([old, recent].map(\.lastPathComponent)), "La purge manuelle exclut les fichiers importés et le rapport actif.")
+        if !regressions.isEmpty {
+            throw NSError(domain: "NonRégression", code: 1, userInfo: [NSLocalizedDescriptionKey: regressions.joined(separator: "\n")])
+        }
         print("Exécution : import refusé, annulation, descendants, délai, navigation après erreur et rétention vérifiés.")
     }
 }

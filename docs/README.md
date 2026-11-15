@@ -11,6 +11,7 @@
 | Le comportement fonctionnel actuel | [Spécifications a posteriori](specifications-fonctionnelles.md) |
 | L’architecture, les données et les garde-fous | [Spécifications techniques](specifications-techniques.md) |
 | Ce qui a été effectivement vérifié | [Recette](recette.md) |
+| Les douze défauts ShipGuard et leurs corrections | [Corrections ShipGuard](corrections-shipguard-2026-11-15.md) |
 | Les défauts trouvés lors de la première revue | [Contre-revue Fable](contre-revue-fable-2026-11-15.md) |
 | Le contrôle indépendant des corrections | [Vérification Fable](verification-corrections-fable-2026-11-15.md) |
 
