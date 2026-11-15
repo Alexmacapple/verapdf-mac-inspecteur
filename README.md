@@ -8,6 +8,27 @@ quand sa localisation est établie, voir la zone encadrée.
 
 Votre PDF reste sur votre Mac. L’application le consulte sans le modifier.
 
+## Aperçu de l’application
+
+Une figure sans alternative : l’erreur est sélectionnée à gauche, le graphique
+est encadré dans le PDF et le conseil apparaît à droite.
+
+![L’application affiche une figure sans alternative, son graphique encadré en orange et le conseil de correction.](docs/images/figure-sans-alternative.png)
+
+<details>
+<summary>Voir aussi un exemple de lien sans description</summary>
+
+Le cadre suit cette fois le lien concerné et le panneau explique la description
+à renseigner dans l’annotation.
+
+![L’application affiche un lien sans description, encadré dans le PDF, avec le diagnostic correspondant.](docs/images/lien-sans-description.png)
+
+</details>
+
+Ces captures réelles utilisent un document entièrement fictif, analysé par
+veraPDF. Aucun document utilisateur n’est publié ; la barre d’outils native
+macOS n’est pas incluse dans ces captures de la zone de travail.
+
 ## À quoi ça sert ?
 
 - Retrouver une figure sans alternative, un lien sans description ou une police non incorporée.
@@ -20,6 +41,19 @@ L’application vous aide à examiner les défauts techniques détectés ; elle 
 corrige pas automatiquement le document et ne remplace pas une vérification humaine.
 
 ## Démarrer
+
+**Compatibilité actuelle : cette version n’est pas prête à être copiée sur
+n’importe quel Mac.** Le binaire local vérifié cible Apple Silicon (`arm64`)
+et porte un minimum de compilation **macOS 27.0**. Les Mac Intel et les
+versions antérieures de macOS ne sont pas validés ; l’ancienne mention
+« macOS 14 minimum » était incorrecte pour ce binaire.
+
+Il faut aussi **Python 3.12**, **pikepdf**, **PyMuPDF** et, pour lancer une
+nouvelle validation, **veraPDF CLI fonctionnel avec son environnement Java**.
+Ces composants ne sont pas embarqués. L’application cherche veraPDF uniquement
+à `/opt/homebrew/bin/verapdf`, ou au chemin absolu fourni par
+`VERAPDF_COMMAND` : **aucune recherche automatique ni sélection dans l’interface**.
+Voir la [compatibilité et la configuration des chemins](docs/compatibilite.md).
 
 Si l’application est déjà installée, ouvrez **veraPDF Mac Inspecteur** depuis
 le Finder, ou depuis le Dock si vous l’y avez ajoutée.
@@ -109,6 +143,17 @@ notamment à vérifier la pertinence des alternatives, l’ordre de lecture et
 l’utilisation réelle avec un lecteur d’écran.
 
 ## En savoir plus
+
+### Les projets officiels veraPDF
+
+| Ressource | Pour quoi faire ? |
+|---|---|
+| [Organisation veraPDF sur GitHub](https://github.com/veraPDF) | Retrouver les dépôts officiels du projet. |
+| [veraPDF-apps](https://github.com/veraPDF/veraPDF-apps) | Consulter le code du validateur en ligne de commande, de l’interface graphique et de l’installateur. Notre application appelle sa commande CLI. |
+| [Profils et règles de validation](https://github.com/veraPDF/veraPDF-validation-profiles) | Explorer les règles utilisées par veraPDF et leurs profils. |
+| [Corpus de tests](https://github.com/veraPDF/veraPDF-corpus) | Consulter des PDF de test PDF/A et PDF/UA ; ce corpus n’est pas embarqué dans notre application. |
+
+### La documentation de cet inspecteur
 
 La [documentation du projet](docs/README.md) présente la genèse, les ressources
 utilisées, les spécifications et les vérifications effectuées. Pour construire

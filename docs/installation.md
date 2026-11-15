@@ -7,14 +7,23 @@ La préparation nécessite le Terminal et les outils de développement macOS.
 Une fois l’application construite, son utilisation se fait dans son interface
 graphique : voir le [guide utilisateur](../README.md).
 
-## Prérequis
+## Compatibilité actuelle et prérequis
 
-- macOS 14 ou ultérieur et les outils de compilation Swift (`xcrun swiftc`).
+- Le binaire local vérifié cible **Apple Silicon** et porte `minos 27.0`
+  (macOS 27.0). Les Mac Intel et les versions antérieures ne sont pas validés.
+- Le plist annonce encore `14.0`, mais cette déclaration contredit le binaire :
+  **macOS 14 n’est pas un minimum garanti**. Le script ne fixe pas la cible
+  de déploiement ; une autre construction doit être vérifiée séparément.
+- Les outils de compilation Swift (`xcrun swiftc`) sont nécessaires pour construire le paquet.
 - Python 3.12 avec les dépendances de [requirements.txt](../requirements.txt).
-- veraPDF installé localement ; le moteur attend par défaut `/opt/homebrew/bin/verapdf`.
+- veraPDF **CLI** installé localement avec son environnement Java fonctionnel ;
+  le moteur attend par défaut `/opt/homebrew/bin/verapdf`.
 
 Les chemins par défaut correspondent à une installation Homebrew Apple Silicon.
 Les scripts du projet ne téléchargent ni Python, ni veraPDF, ni leurs dépendances.
+L’application ne recherche automatiquement ni veraPDF ni un autre Python.
+Consultez la [matrice de compatibilité et la configuration des chemins](compatibilite.md)
+avant une installation sur un autre poste.
 
 ## Construire l’application
 
@@ -50,10 +59,12 @@ Le paquet mémorise le chemin de Python au moment de sa construction. Si vous
 déplacez le projet ou son environnement `.venv`, reconstruisez l’application
 avec le bon `PYTHON_BIN`. Actualisez aussi vos alias s’ils pointent vers un ancien emplacement.
 
-`VERAPDF_COMMAND` permet de choisir un autre exécutable veraPDF dans
-l’environnement de lancement du moteur. Cette variable doit être transmise
-au processus qui lance l’application ; un lancement depuis le Finder ne
-reprend pas nécessairement les variables de votre Terminal.
+`VERAPDF_COMMAND` permet de fournir un autre chemin **absolu** vers veraPDF.
+Le moteur n’utilise pas le `PATH` pour le trouver et n’offre pas de sélecteur
+dans l’interface. La variable doit être transmise au processus qui lance
+l’application ; le Finder et le Dock ne reprennent pas nécessairement les
+variables du Terminal. Un [exemple de lancement direct](compatibilite.md#fournir-un-autre-chemin-pour-un-lancement)
+explique cette configuration, qui n’est pas persistante.
 
 ## Vérifier l’installation
 

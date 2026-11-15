@@ -118,6 +118,12 @@ et veraPDF ne sont pas embarqués ; le lien Homebrew de Python évite un chemin
 Cellar versionné. Le binaire de livraison exclut la capture de diagnostic ;
 `DIAGNOSTICS=1 bash scripts/build.sh` permet une construction dédiée.
 
+Le paquet local observé est uniquement `arm64`, avec `minos 27.0`, alors que
+le plist déclare `14.0`. Le script ne fixe pas de cible de déploiement : la
+compatibilité macOS 14 n’est donc pas acquise. Les chemins de veraPDF et de
+Python ne sont pas découverts automatiquement ; voir les
+[constats de compatibilité et règles de configuration](compatibilite.md).
+
 ## Qualification
 
 [scripts/test.sh](../scripts/test.sh) exécute les tests Python, le harnais PDFKit

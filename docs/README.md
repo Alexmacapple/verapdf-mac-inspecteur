@@ -4,6 +4,8 @@
 |---|---|
 | Comment utiliser l’application | [Guide utilisateur](../README.md) |
 | Comment l’installer et la maintenir | [Installation et maintenance](installation.md) |
+| Sur quels Mac et avec quels chemins elle fonctionne | [Compatibilité et dépendances](compatibilite.md) |
+| D’où viennent les captures publiques | [Provenance et reproduction](images/README.md) |
 | Le besoin, l’origine et les décisions | [Genèse du projet](genese.md) |
 | Les logiciels, ressources et interventions utilisés | [Moyens et sources](moyens-et-sources.md) |
 | Le comportement fonctionnel actuel | [Spécifications a posteriori](specifications-fonctionnelles.md) |

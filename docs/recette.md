@@ -80,6 +80,13 @@ dossier interne de rapports restent stables pour conserver les données existant
 
 ## Limites de la recette
 
+Le contrôle du binaire a révélé `arm64`, `LC_BUILD_VERSION minos 27.0` et SDK
+`27.2`, sur un poste macOS 27.0. Le plist déclare pourtant `14.0` : cette
+incohérence de compilation reste à corriger et invalide l’ancienne annonce
+de compatibilité macOS 14. Aucun essai sur Mac Intel ou ancien macOS n’a été
+réalisé. Les chemins par défaut sont locaux, sans découverte automatique :
+voir [Compatibilité et dépendances](compatibilite.md).
+
 La capture système est refusée à l’hôte REA par les permissions macOS.
 Les captures internes de l’application ne couvrent pas les dialogues système.
 Le parcours manuel complet des boutons, le clavier et VoiceOver ne sont pas
