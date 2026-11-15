@@ -1,0 +1,13 @@
+build/
+.DS_Store
+__pycache__/
+*.pyc
+.impeccable/review/
+.venv/
+.env
+.env.*
+.commit-drafts/
+reports/
+rapports/
+captures/
+*.pdf
