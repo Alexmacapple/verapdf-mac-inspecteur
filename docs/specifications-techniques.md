@@ -1,9 +1,9 @@
 # Spécifications techniques a posteriori
 
-État du code 0.2.0, reconstitué le 15 novembre 2026. Références principales :
-[carte du code](../CODEBASE_MAP.md), [modèle](../Sources/Models.swift),
-[exécution](../Sources/WorkerTask.swift), [analyse](../worker/analyzer.py),
-[localisation](../worker/locations.py) et [tests](../scripts/test.sh).
+Cette description porte sur la version 0.2.1 du 15 novembre 2026. Elle s’appuie sur la
+[carte du code](../CODEBASE_MAP.md), le [modèle](../Sources/Models.swift),
+l’[exécution](../Sources/WorkerTask.swift), l’[analyse](../worker/analyzer.py),
+la [localisation](../worker/locations.py) et les [tests](../scripts/test.sh).
 
 ## Architecture et circulation des données
 
@@ -42,9 +42,12 @@ l’affichage ; `ReadOnlyPDFView` neutralise les actions PDF et les menus de lie
 Le moteur CLI crée une session POSIX avant de lancer le validateur. L’annulation
 et le délai global envoient SIGTERM au groupe ; un SIGKILL de secours intervient
 après deux secondes si nécessaire. Une demande annulée avant le lancement ne
-démarre pas le processus. Un résultat arrivé après une annulation n’est pas publié.
+démarre pas le processus. Si le moteur se termine après une demande d’arrêt,
+`WorkerTask` envoie aussi SIGKILL au groupe avant de libérer le processus,
+pour arrêter les descendants encore actifs. Un résultat arrivé après une annulation n’est pas publié.
 
-Les textes extraits sont mis en cache par page pendant un traitement. Les
+Le cache de texte conserve uniquement les blocs de texte extraits de chaque page,
+en excluant les données d’image. Les
 inventaires d’images sont eux aussi mémorisés par page. Aucun cache de contenu
 PDF n’est conservé entre deux analyses.
 
@@ -73,12 +76,17 @@ changements de page dans la liaison SwiftUI.
 Le moteur exige exactement un job correspondant au PDF choisi. Le chemin
 existant peut désigner le même fichier ou un fichier de même empreinte. Si
 l’ancien chemin a disparu, nom et taille identiques permettent une association
-déclarative de fichier déplacé. Plusieurs candidats sont refusés.
+déclarative de fichier déplacé. Pour comparer deux fichiers distincts, le moteur
+vérifie d’abord leur taille, puis réutilise les empreintes déjà calculées pendant
+la lecture du rapport. Plusieurs candidats correspondants sont refusés.
 
 Le profil accepté est `PDF/UA-1 validation profile`, l’état doit être `normal`,
 la taille doit être présente et correspondre au fichier, et les compteurs
 globaux doivent être des entiers naturels. Un total d’échecs sans détail est
-une erreur ; un détail tronqué reste exploitable mais explicitement incomplet.
+une erreur. Le moteur refuse aussi les contradictions entre règles, occurrences
+et totaux déclarés. Un détail tronqué cohérent reste exploitable. Pour le
+déclarer complet, le moteur vérifie le nombre de règles échouées et le nombre
+d’occurrences chargées, au total et pour chaque règle.
 
 Le SHA-256 du PDF est comparé avant et après validation et localisation. Ce
 contrôle détecte une modification pendant l’opération ; il ne prouve pas les

@@ -1,6 +1,6 @@
 # Spécifications fonctionnelles a posteriori
 
-**Version observée : 0.2.0 — 15 novembre 2026.** Reconstitution du comportement
+**Version 0.2.1 du 15 novembre 2026.** Reconstitution du comportement
 implémenté dans [l’interface](../Sources/Views.swift), le [modèle](../Sources/Models.swift)
 et le [moteur](../worker/analyzer.py). Ce document décrit l’existant, pas une promesse
 de couverture complète de l’accessibilité ni un cahier des charges initial.
@@ -33,20 +33,20 @@ violation unique, et plusieurs règles peuvent concerner le même objet.
 | F01 | Le dialogue **Ouvrir un PDF** accepte les fichiers PDF et lance une analyse. | `App.swift`, `Models.swift` ; démarrage de recette. |
 | F02 | **Analyser** appelle veraPDF avec le profil `ua1`. | `analyzer.py` ; commande contrôlée dans les tests. |
 | F03 | **Importer un XML** est disponible avec un PDF ouvert ; il ne relance pas veraPDF. | `App.swift`, `analyzer.py` ; test d’import. |
-| F04 | Un import exige un profil PDF/UA-1 reconnu, un état normal, une taille et des compteurs valides, et un seul job associé. | Tests de métadonnées, profil et jobs ambigus. |
+| F04 | Un import exige un profil PDF/UA-1 reconnu, un état normal, une taille valide et un seul job associé. Si le XML annonce zéro échec tout en détaillant une règle échouée, l’import est refusé. | Tests de métadonnées, de jobs ambigus et de cohérence des compteurs. |
 | F05 | Un fichier déplacé peut être associé par nom et taille si l’ancien chemin n’existe plus ; cet import reste déclaré sans preuve historique des octets. | Test de déplacement ; bandeau de provenance. |
 | F06 | La liste distingue règle et occurrence, indique les pages connues et permet de sélectionner un échec. | `Views.swift`, test des compteurs. |
 | F07 | Le filtre porte sur titre, clause, page, message et exigence originale. | `Inspector.filtered`. |
 | F08 | La sélection conduit à la première page connue de l’occurrence ; plusieurs pages restent accessibles dans le détail. | `Inspector.select`, panneau de localisation. |
 | F09 | Les flèches, la navigation PDFKit et le compteur de page restent cohérents ; les anciens cadres disparaissent immédiatement après un changement de page. | Harnais PDFKit. |
-| F10 | Le zoom varie par pas de 0,25, entre 0,5 et 4 ; **Ajuster** revient au facteur relatif 1. | `Views.swift`, `PDFCanvas.swift`. |
+| F10 | Les boutons de zoom procèdent par pas de 0,25, entre 0,5 et 4. **Ajuster** réadapte la page à la fenêtre, y compris après un zoom natif de PDFKit. | Harnais d’actions Swift. |
 | F11 | Les cinq règles expliquées en français ont un conseil spécifique. Les autres montrent directement leur exigence originale et « traduction indisponible » dans le détail. | Catalogue `explain`, tests et capture de revue. |
 | F12 | Exigence, message et contexte techniques restent consultables dans un volet dépliable. | `Views.swift`. |
 | F13 | Un rapport incomplet affiche un bandeau et les nombres chargés par règle. Le pied de page sépare occurrences visibles, chargées et échecs totaux. | Tests de troncature et capture indépendante. |
 | F14 | **Enregistrer le XML** copie atomiquement le rapport courant vers une destination choisie. | `App.swift` ; dialogue manuel non qualifié intégralement. |
 | F15 | **Annuler** interrompt le moteur et ses descendants. Un délai global borne aussi l’attente. Le diagnostic précédent est conservé. | Harnais d’exécution avec sous-processus témoin. |
 | F16 | Un import refusé ou une nouvelle analyse en erreur conserve le PDF, la page et le diagnostic précédents. | Harnais d’états. |
-| F17 | Après un premier échec sans diagnostic antérieur, un PDF lisible reste affichable et navigable avec son vrai nombre de pages. | Harnais d’états sur deux pages. |
+| F17 | Si la première analyse échoue, même lorsque le moteur manque, le PDF lisible reste consultable avec son nombre de pages. | Harnais d’états sur deux pages. |
 | F18 | Les anciens rapports générés sont déplacés à la Corbeille selon la rétention ; le menu **Rapports** permet leur nettoyage manuel. Le rapport courant et les fichiers importés ne sont pas visés. | `ReportCache.swift`, tests à Corbeille simulée. |
 
 ## Règles de localisation
@@ -66,8 +66,9 @@ n’est pas ajoutée automatiquement et ne vaut pas correction des autres défau
 
 ## États et erreurs
 
-Pendant un traitement, les actions qui lancent ou importent un autre contrôle
-sont désactivées. L’annulation reste disponible. Le résultat antérieur reste
+Pendant un traitement, le bouton **Ouvrir un PDF** de l’accueil est désactivé.
+L’ouverture d’un second sélecteur, la relance et l’import sont bloqués.
+L’annulation reste disponible. Le résultat antérieur reste
 consultable ; le résultat nouveau le remplace seulement après une réponse valide.
 
 Un import présente un bandeau visible : chemin, nom et taille n’attestent pas
